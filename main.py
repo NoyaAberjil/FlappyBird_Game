@@ -7,7 +7,7 @@ pygame.init()
 
 w, h = 1200 , 600
 screen = pygame.display.set_mode([w, h])
-pygame.display.set_caption('Ping pong - by Noya aberjil')
+pygame.display.set_caption('Flappy Bird - by Noya aberjil')
 backgrund= pygame.image.load("background_pic.png")
 backgrund = pygame.transform.scale(backgrund, (w, h))
 
