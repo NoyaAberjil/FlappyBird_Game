@@ -1,65 +1,83 @@
 import pygame
-import time
-
-
+from pygame.locals import *
 
 pygame.init()
 
-width, hight = 1200 , 600
-bird_size = 100
-bird_x = 10
-bird_y = 380
-vel = 20
-jumping = False
-Y_GRAVITY = 1
-JUMP_HIGHT = 20
-Y_VELCITY = JUMP_HIGHT
-screen = pygame.display.set_mode([width, hight])
+clock = pygame.time.Clock()
+fps = 60
+
+screen_width, screen_hight = 564 , 536
+running = True 
+
+screen = pygame.display.set_mode((screen_width, screen_hight))
 pygame.display.set_caption('Flappy Bird - by Noya aberjil')
-backgrund= pygame.image.load("background_pic.png")
-backgrund = pygame.transform.scale(backgrund, (width, hight))
-bird_pic = pygame.image.load("pngegg.png")
-bird_pic = pygame.transform.scale(bird_pic, (bird_size, bird_size))
+
+backgrund= pygame.image.load("bg.png")
+ground_scroll_pic = pygame.image.load("ground_scorll.png")
+ground_pic = pygame.image.load("ground_pic.png")
+
+image_sprite_flappy = [pygame.image.load("bird1.png"),
+                pygame.image.load("bird2.png"),
+                pygame.image.load("bird3.png")]
+value_flappy = 0
+x_flappy = 100
+y_flappy = int(screen_hight / 2)
+flappy_cooldown = 0
+flappy_moving = 0
+
+x_pipe = 0
+y_pipe = 0
+image_pipe = pygame.image.load("pipe.png")
 
 
+ground_scroll = 0
+scroll_speed = 3
 
+
+flappy_vel = 2
+jumping = False
 
 # Run until the user asks to quit
-running = True
-black=(0,0,0)
-white=(255,255,255)
-font = pygame.font.SysFont("Arial", 26)
 while running:
 
+    clock.tick(fps)
     # Did the user click the window close button?
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         keys = pygame.key.get_pressed()  
+    
+    keys = pygame.key.get_pressed()  
+    
+    if keys[pygame.K_SPACE]:
+        flappy_vel = -10
 
-    keys_pressed = pygame.key.get_pressed()
-
-    if keys_pressed[pygame.K_SPACE]:
-        jumping = True
-
-    screen.blit(backgrund, (0,0))
-
-    if jumping:
-        bird_y -= Y_VELCITY
-        Y_VELCITY -= Y_GRAVITY
-        if Y_VELCITY < -JUMP_HIGHT:
-            jumping = False
-            Y_VELCITY = JUMP_HIGHT 
-        screen.blit(bird_pic,(bird_x,bird_y))
     else:
-        screen.blit(bird_pic,(bird_x,bird_y))
+        if value_flappy >= len(image_sprite_flappy):
+            value_flappy = 0
+        bird_image = image_sprite_flappy[value_flappy]
+
+        if y_flappy > 392 :
+            flappy_vel = 0
+        else:
+            flappy_vel = 2
+    y_flappy += flappy_vel
+
+    screen.blit(backgrund, (0,0)) #draw background
+    screen.blit(ground_pic, (0,428))
+    screen.blit(ground_scroll_pic, (ground_scroll,428))
+    screen.blit(bird_image, (x_flappy, y_flappy + flappy_vel))
+    ground_scroll -= scroll_speed
+
+    if abs(ground_scroll) > 25:
+        ground_scroll = 0
+    
+    flappy_cooldown +=1
+    if flappy_cooldown > 5:
+       value_flappy += 1
+       flappy_cooldown = 0
 
 
-    # write text in screen
-    txtsurf = font.render("Score:"+str(), True, black)
-    screen.blit(txtsurf,(20,20))
-    pygame.display.flip()
-
-# Done! Time to quit.
+    pygame.display.update()
 
 pygame.quit()
