@@ -36,7 +36,7 @@ pipe3 = pygame.image.load("pipe_3.png")
 pipe4 = pygame.image.load("pipe_4.png")
 pipe_list = [pipe, pipe2, pipe3, pipe4]
 pipes = []
-MAX_PIPES = 4
+MAX_PIPES = 6
 
 
 ground_scroll = 0
@@ -47,21 +47,19 @@ flappy_vel = 2
 jumping = False
 
 def check_players():
-    global pipes
     if len(pipes)==0:
         return True
-    elif pipes[0][1] < 330:     
+    elif pipes[-1][1] < 450:     
         return True
     else:
         return False
         
 def generatePalyers():
     global pipes
-    global pipe_list
-
-    if check_players() and (len(pipes) < MAX_PIPES):
+    
+    if check_players():
         pipe = pipe_list[random.randint(0, len(pipe_list) - 1)]
-        pipes.append([pipe, 426])
+        pipes.append([pipe, 564])
 
 def move_pipes():
     global pipes
@@ -69,13 +67,15 @@ def move_pipes():
         pipe[1] -= scroll_speed
 
 def show_players():
-    global screen
-    global pipes
-    global backgrund
-
-    print(pipes)
     for pipe in pipes:
         screen.blit(pipe[0], (pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1]))
+        
+def remove_players():
+    global pipes
+    
+    for pipe in pipes:
+        if pipe[1] < -50:
+            pipes.remove(pipe)
 
 # Run until the user asks to quit
 while running:
@@ -110,6 +110,7 @@ while running:
     move_pipes()
     generatePalyers()
     show_players()
+    remove_players()
 
     ground_scroll -= scroll_speed
 
