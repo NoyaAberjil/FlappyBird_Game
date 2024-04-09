@@ -40,11 +40,14 @@ MAX_PIPES = 6
 
 
 ground_scroll = 0
-scroll_speed = 1
+scroll_speed = 4
 
 
-flappy_vel = 2
+flappy_vel = 0
 jumping = False
+game_over = False
+
+SCORE = 0
 
 def check_players():
     if len(pipes)==0:
@@ -77,6 +80,16 @@ def remove_players():
         if pipe[1] < -50:
             pipes.remove(pipe)
 
+def check_game_over(flappy_y, flappy_x,):
+    end_game = False
+    size_of_pipe = 50
+    for pipe in pipes:
+        if backgrund.get_size()[1] - pipe[0].get_size()[1] > flappy_y and pipe[1] < flappy_x < pipe[1] + size_of_pipe:
+            end_game = True
+            break
+    
+    return end_game
+
 # Run until the user asks to quit
 while running:
 
@@ -85,37 +98,42 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        keys = pygame.key.get_pressed()  
-    
-    keys = pygame.key.get_pressed()  
-    
-    if keys[pygame.K_SPACE]:
-        flappy_vel = -10
+        elif event.type == pygame.KEYDOWN and event.key== pygame.K_SPACE and jumping:
+            # print(event)
+            flappy_vel = -40
+            print(flappy_vel)
+        if event.type == pygame.MOUSEBUTTONDOWN and jumping == False:
+            jumping = True
 
-    else:
+
         if value_flappy >= len(image_sprite_flappy):
             value_flappy = 0
         bird_image = image_sprite_flappy[value_flappy]
 
-        if y_flappy > 392 :
-            flappy_vel = 0
-        else:
-            flappy_vel = 2
-    y_flappy += flappy_vel
-
     screen.blit(backgrund, (0,0)) #draw background
     screen.blit(ground_pic, (0,428))
     screen.blit(ground_scroll_pic, (ground_scroll,428))
-    screen.blit(bird_image, (x_flappy, y_flappy + flappy_vel))
-    move_pipes()
+
+    y_flappy += flappy_vel
+    if y_flappy > 392 :
+        flappy_vel = 0
+        game_over = True
+        jumping = False
+    if jumping:
+        flappy_vel = 2
+    else:
+        flappy_vel = 0
+
+    screen.blit(bird_image, (x_flappy, y_flappy))
     generatePalyers()
     show_players()
     remove_players()
+    if game_over == False and jumping:
+        move_pipes()
+        ground_scroll -= scroll_speed
 
-    ground_scroll -= scroll_speed
-
-    if abs(ground_scroll) > 25:
-        ground_scroll = 0
+        if abs(ground_scroll) > 25:
+            ground_scroll = 0
     
     flappy_cooldown +=1
     if flappy_cooldown > 5:
