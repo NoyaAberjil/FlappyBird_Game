@@ -44,6 +44,7 @@ scroll_speed = 4
 
 
 flappy_vel = 0
+start_game = False
 jumping = False
 game_over = False
 
@@ -80,16 +81,23 @@ def remove_players():
         if pipe[1] < -50:
             pipes.remove(pipe)
 
-def check_game_over(flappy_y, flappy_x,):
-    end_game = False
-    size_of_pipe = 50
+def check_touch_pipe(flappy_y, flappy_x):
     for pipe in pipes:
-        if backgrund.get_size()[1] - pipe[0].get_size()[1] > flappy_y and pipe[1] < flappy_x < pipe[1] + size_of_pipe:
-            end_game = True
-            break
-    
-    return end_game
+        # Get the coordinates of Flappy Bird's bounding box
+        flappy_rect = pygame.Rect(flappy_x, flappy_y, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
+        # Get the coordinates of the pipe's bounding box
+        pipe_rect = pygame.Rect(pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1], pipe[0].get_width(), pipe[0].get_height())
+        # Check for collision between Flappy Bird and the pipe
+        if flappy_rect.colliderect(pipe_rect):
+            return True  # Collision detected
+    return False  # No collision detected
 
+# def check_score():
+#     global SCORE
+#     pass_pipe = False
+    
+#     if len(pipes) > 0:
+#         if flappy_rect.left() >
 # Run until the user asks to quit
 while running:
 
@@ -98,17 +106,16 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN and event.key== pygame.K_SPACE and jumping:
-            # print(event)
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and start_game and jumping:
             flappy_vel = -40
-            print(flappy_vel)
-        if event.type == pygame.MOUSEBUTTONDOWN and jumping == False:
+        if event.type == pygame.MOUSEBUTTONDOWN and start_game == False:
+            start_game = True
             jumping = True
 
 
-        if value_flappy >= len(image_sprite_flappy):
-            value_flappy = 0
-        bird_image = image_sprite_flappy[value_flappy]
+    if value_flappy >= len(image_sprite_flappy):
+        value_flappy = 0
+    bird_image = image_sprite_flappy[value_flappy]
 
     screen.blit(backgrund, (0,0)) #draw background
     screen.blit(ground_pic, (0,428))
@@ -118,8 +125,9 @@ while running:
     if y_flappy > 392 :
         flappy_vel = 0
         game_over = True
+        start_game = False
         jumping = False
-    if jumping:
+    if start_game:
         flappy_vel = 2
     else:
         flappy_vel = 0
@@ -128,12 +136,15 @@ while running:
     generatePalyers()
     show_players()
     remove_players()
-    if game_over == False and jumping:
+    if game_over == False and start_game and not check_touch_pipe(y_flappy, x_flappy):
         move_pipes()
         ground_scroll -= scroll_speed
 
         if abs(ground_scroll) > 25:
             ground_scroll = 0
+    else:
+        jumping = False
+    
     
     flappy_cooldown +=1
     if flappy_cooldown > 5:
