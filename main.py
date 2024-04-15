@@ -10,6 +10,9 @@ fps = 60
 screen_width, screen_hight = 564 , 536
 running = True 
 
+font = pygame.font.SysFont("Bauhaus 93", 60)
+white = (255, 255, 255)
+
 screen = pygame.display.set_mode((screen_width, screen_hight))
 pygame.display.set_caption('Flappy Bird - by Noya aberjil')
 
@@ -17,6 +20,8 @@ pygame.display.set_caption('Flappy Bird - by Noya aberjil')
 backgrund= pygame.image.load("bg.png")
 ground_scroll_pic = pygame.image.load("ground_scorll.png")
 ground_pic = pygame.image.load("ground_pic.png")
+button_img = pygame.image.load("restart.png")
+button = pygame.Rect(( screen_width // 2 - 50), (screen_hight // 2 - 100 ), button_img.get_size()[0], button_img.get_size()[1])
 
 
 image_sprite_flappy = [pygame.image.load("bird1.png"),
@@ -40,14 +45,14 @@ MAX_PIPES = 6
 
 
 ground_scroll = 0
-scroll_speed = 4
+scroll_speed = 1
 
 
 flappy_vel = 0
 start_game = False
 jumping = False
 game_over = False
-
+touched_pipe = False
 SCORE = 0
 
 def check_players():
@@ -81,10 +86,11 @@ def remove_players():
         if pipe[1] < -50:
             pipes.remove(pipe)
 
-def check_touch_pipe(flappy_y, flappy_x):
+def check_touch_pipe():
     for pipe in pipes:
         # Get the coordinates of Flappy Bird's bounding box
-        flappy_rect = pygame.Rect(flappy_x, flappy_y, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
+        flappy_rect = pygame.Rect(x_flappy, y_flappy, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
+
         # Get the coordinates of the pipe's bounding box
         pipe_rect = pygame.Rect(pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1], pipe[0].get_width(), pipe[0].get_height())
         # Check for collision between Flappy Bird and the pipe
@@ -92,12 +98,40 @@ def check_touch_pipe(flappy_y, flappy_x):
             return True  # Collision detected
     return False  # No collision detected
 
-# def check_score():
-#     global SCORE
-#     pass_pipe = False
-    
-#     if len(pipes) > 0:
-#         if flappy_rect.left() >
+
+def check_score():
+    global SCORE
+    pass_pipe = False
+    flappy_rect = pygame.Rect(x_flappy, y_flappy, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
+    if len(pipes) > 0:
+        for pipe in pipes:
+            pipe_rect = pygame.Rect(pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1], pipe[0].get_width(), pipe[0].get_height())
+            if (flappy_rect.left > pipe_rect.left) and (flappy_rect.right < pipe_rect.right + 3) and pass_pipe == False:
+                pass_pipe = True
+            if pass_pipe:
+                if flappy_rect.left > pipe_rect.left:
+                    SCORE += 1
+                    pass_pipe = False
+
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x, y))
+
+def draw_button():
+    click_restart = False
+
+    pos = pygame.mouse.get_pos()
+    #check if mouse is over the button
+    if button.collidepoint(pos):
+        if pygame.mouse.get_pressed()[0] == 1:
+            click_restart = True
+    screen.blit(button_img, button)
+    return click_restart
+
+def reset_game():
+    global pipes
+    pipes = []
+
 # Run until the user asks to quit
 while running:
 
@@ -136,14 +170,27 @@ while running:
     generatePalyers()
     show_players()
     remove_players()
-    if game_over == False and start_game and not check_touch_pipe(y_flappy, x_flappy):
+    if check_touch_pipe() or y_flappy > 392 :
+        game_over = True
+        start_game = False
+        jumping = False
+
+    if game_over == False and start_game:
         move_pipes()
+        check_score()
         ground_scroll -= scroll_speed
 
         if abs(ground_scroll) > 25:
             ground_scroll = 0
-    else:
-        jumping = False
+
+    if game_over:
+        if draw_button() == True:
+            SCORE = 0
+            pipes = []
+            y_flappy = int(screen_hight / 2)
+            game_over = False
+            
+       
     
     
     flappy_cooldown +=1
@@ -151,6 +198,7 @@ while running:
        value_flappy += 1
        flappy_cooldown = 0
 
+    draw_text(str(SCORE),font, white,int(screen_width / 2),20)
 
     pygame.display.update()
 
