@@ -18,19 +18,19 @@ screen = pygame.display.set_mode((screen_width, screen_hight))
 pygame.display.set_caption('Flappy Bird - by Noya aberjil')
 
 #backgrund sound
-mixer.music.load("backgroundMuisic.mp3")
+mixer.music.load("Sounds\\backgroundMuisic.mp3")
 mixer.music.play(-1)
 
-backgrund= pygame.image.load("bg.png")
-ground_scroll_pic = pygame.image.load("ground_scorll.png")
-ground_pic = pygame.image.load("ground_pic.png")
-button_img = pygame.image.load("restart.png")
+backgrund= pygame.image.load("Game_pictrues\\bg.png")
+ground_scroll_pic = pygame.image.load("Game_pictrues\\ground_scorll.png")
+ground_pic = pygame.image.load("Game_pictrues\\ground_pic.png")
+button_img = pygame.image.load("Game_pictrues\\restart.png")
 button = pygame.Rect(( screen_width // 2 - 50), (screen_hight // 2 - 100 ), button_img.get_size()[0], button_img.get_size()[1])
 
 
-image_sprite_flappy = [pygame.image.load("bird1.png"),
-                pygame.image.load("bird2.png"),
-                pygame.image.load("bird3.png")]
+image_sprite_flappy = [pygame.image.load("Game_pictrues\\bird1.png"),
+                pygame.image.load("Game_pictrues\\bird2.png"),
+                pygame.image.load("Game_pictrues\\bird3.png")]
 value_flappy = 0
 x_flappy = 100
 y_flappy = int(screen_hight / 2)
@@ -39,10 +39,10 @@ flappy_moving = 0
 
 x_pipe = 0
 y_pipe = 0
-pipe = pygame.image.load("pipe.png")
-pipe2 = pygame.image.load("pipe_2.png")
-pipe3 = pygame.image.load("pipe_3.png")
-pipe4 = pygame.image.load("pipe_4.png")
+pipe = pygame.image.load("Game_pictrues\\pipe.png")
+pipe2 = pygame.image.load("Game_pictrues\\pipe_2.png")
+pipe3 = pygame.image.load("Game_pictrues\\pipe_3.png")
+pipe4 = pygame.image.load("Game_pictrues\\pipe_4.png")
 pipe_list = [pipe, pipe2, pipe3, pipe4]
 pipes = []
 MAX_PIPES = 6
@@ -50,7 +50,7 @@ MAX_PIPES = 6
 worte = True
 
 ground_scroll = 0
-scroll_speed = 4
+scroll_speed = 3
 
 
 flappy_vel = 0
@@ -59,22 +59,31 @@ jumping = False
 game_over = False
 touched_pipe = False
 SCORE = 0
+flip_pic = False
 
 def check_players():
     if len(pipes)==0:
         return True
-    elif pipes[-1][1] < 450:     
+    elif pipes[-1][1] < 350:   #450  
         return True
     else:
         return False
-        
+    
 def generatePalyers():
     global pipes
-    
+    global flip_pic
     if check_players():
         pipe = pipe_list[random.randint(0, len(pipe_list) - 1)]
-        pipes.append([pipe, 564])
-
+        if flip_pic:
+            # pygame.transform.flip() will flip the image 
+            pipe = pygame.transform.flip(pipe, True, False)
+            pipe = pygame.transform.flip(pipe, False, True)
+            pipes.append([pipe, 564 ,flip_pic ])   
+            flip_pic = False
+        else: 
+            pipes.append([pipe, 564 ,flip_pic ])   
+            flip_pic = True
+    
 def move_pipes():
     global pipes
     for pipe in pipes:
@@ -82,7 +91,10 @@ def move_pipes():
 
 def show_players():
     for pipe in pipes:
-        screen.blit(pipe[0], (pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1]))
+        if pipe[2]:
+            screen.blit(pipe[0], (pipe[1], 0))
+        else:
+            screen.blit(pipe[0], (pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1]))
         
 def remove_players():
     global pipes
@@ -97,7 +109,10 @@ def check_touch_pipe():
         flappy_rect = pygame.Rect(x_flappy, y_flappy, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
 
         # Get the coordinates of the pipe's bounding box
-        pipe_rect = pygame.Rect(pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1], pipe[0].get_width(), pipe[0].get_height())
+        if pipe[2]: 
+            pipe_rect = pygame.Rect(pipe[1], 0, pipe[0].get_width(), pipe[0].get_height())
+        else:
+            pipe_rect = pygame.Rect(pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1], pipe[0].get_width(), pipe[0].get_height())
         # Check for collision between Flappy Bird and the pipe
         if flappy_rect.colliderect(pipe_rect):
             return True  # Collision detected
@@ -157,9 +172,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and start_game and jumping and not(check_bound()):
-            flappy_vel = -40
+            flappy_vel = -50
             #jump music
-            jump_sound = mixer.Sound("jumpSuond.wav")
+            jump_sound = mixer.Sound("Sounds\jumpSuond.wav")
             jump_sound.play()
         if event.type == pygame.MOUSEBUTTONDOWN and start_game == False:
             start_game = True
@@ -181,7 +196,7 @@ while running:
         start_game = False
         jumping = False
     if start_game:
-        flappy_vel = 2
+        flappy_vel = 2.7
     else:
         flappy_vel = 0
 
