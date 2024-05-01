@@ -138,7 +138,7 @@ def check_bound():
 
 #  
 def write_highScore():
-    with open("Score.txt", "w+") as score_file:
+    with open("HighScore.txt", "w+") as score_file:
         highscore = score_file.read()
 
         if len(highscore) > 0:
