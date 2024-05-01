@@ -1,4 +1,5 @@
 import pygame
+from pygame import mixer
 from pygame.locals import *
 import random
 
@@ -16,6 +17,9 @@ white = (255, 255, 255)
 screen = pygame.display.set_mode((screen_width, screen_hight))
 pygame.display.set_caption('Flappy Bird - by Noya aberjil')
 
+#backgrund sound
+mixer.music.load("backgroundMuisic.mp3")
+mixer.music.play(-1)
 
 backgrund= pygame.image.load("bg.png")
 ground_scroll_pic = pygame.image.load("ground_scorll.png")
@@ -43,9 +47,10 @@ pipe_list = [pipe, pipe2, pipe3, pipe4]
 pipes = []
 MAX_PIPES = 6
 
+worte = True
 
 ground_scroll = 0
-scroll_speed = 1
+scroll_speed = 4
 
 
 flappy_vel = 0
@@ -98,20 +103,14 @@ def check_touch_pipe():
             return True  # Collision detected
     return False  # No collision detected
 
-
 def check_score():
     global SCORE
-    pass_pipe = False
     flappy_rect = pygame.Rect(x_flappy, y_flappy, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
-    if len(pipes) > 0:
-        for pipe in pipes:
-            pipe_rect = pygame.Rect(pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1], pipe[0].get_width(), pipe[0].get_height())
-            if (flappy_rect.left > pipe_rect.left) and (flappy_rect.right < pipe_rect.right + 3) and pass_pipe == False:
-                pass_pipe = True
-            if pass_pipe:
-                if flappy_rect.left > pipe_rect.left:
-                    SCORE += 1
-                    pass_pipe = False
+    for pipe in pipes:
+        pipe_rect = pygame.Rect(pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1], pipe[0].get_width(), pipe[0].get_height())
+        if flappy_rect.right > pipe_rect.right and pipe_rect.right + scroll_speed > flappy_rect.right:
+            # If Flappy Bird passes the right side of the pipe
+            SCORE += 1
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -132,6 +131,23 @@ def reset_game():
     global pipes
     pipes = []
 
+def check_bound():
+    if y_flappy < 10:
+        return True
+    return False
+
+#  
+def write_highScore():
+    with open("Score.txt", "w+") as score_file:
+        highscore = score_file.read()
+
+        if len(highscore) > 0:
+            highscore = int(highscore)
+            if highscore < SCORE:
+                score_file.write(str(SCORE))  # Write the new high score
+        else:
+            score_file.write(str(SCORE))  # Write the new high score
+
 # Run until the user asks to quit
 while running:
 
@@ -140,8 +156,11 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and start_game and jumping:
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and start_game and jumping and not(check_bound()):
             flappy_vel = -40
+            #jump music
+            jump_sound = mixer.Sound("jumpSuond.wav")
+            jump_sound.play()
         if event.type == pygame.MOUSEBUTTONDOWN and start_game == False:
             start_game = True
             jumping = True
@@ -184,11 +203,15 @@ while running:
             ground_scroll = 0
 
     if game_over:
+        if worte:
+            write_highScore()
+            worte = False
         if draw_button() == True:
             SCORE = 0
             pipes = []
             y_flappy = int(screen_hight / 2)
             game_over = False
+            worte = True
             
        
     
