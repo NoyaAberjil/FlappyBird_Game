@@ -11,6 +11,30 @@ fps = 60
 screen_width, screen_hight = 564 , 536
 running = True 
 
+pipes = []
+MAX_PIPES = 6
+SCORE = 0
+
+worte = True
+
+ground_scroll = 0
+scroll_speed = 3
+flappy_vel = 0
+start_game = False
+jumping = False
+game_over = False
+touched_pipe = False
+flip_pic = False
+value_flappy = 0
+x_flappy = 100
+y_flappy = int(screen_hight / 2)
+flappy_cooldown = 0
+flappy_moving = 0
+uper_bound = 10
+
+x_pipe = 0
+y_pipe = 0
+
 font = pygame.font.SysFont("Bauhaus 93", 60)
 white = (255, 255, 255)
 
@@ -18,7 +42,7 @@ screen = pygame.display.set_mode((screen_width, screen_hight))
 pygame.display.set_caption('Flappy Bird - by Noya aberjil')
 
 #backgrund sound
-mixer.music.load("Sounds\\backgroundMuisic.mp3")
+mixer.music.load("Sounds\\CARNIVAL_bg.mp3")
 mixer.music.play(-1)
 
 backgrund= pygame.image.load("Game_pictrues\\bg.png")
@@ -31,48 +55,33 @@ button = pygame.Rect(( screen_width // 2 - 50), (screen_hight // 2 - 100 ), butt
 image_sprite_flappy = [pygame.image.load("Game_pictrues\\bird1.png"),
                 pygame.image.load("Game_pictrues\\bird2.png"),
                 pygame.image.load("Game_pictrues\\bird3.png")]
-value_flappy = 0
-x_flappy = 100
-y_flappy = int(screen_hight / 2)
-flappy_cooldown = 0
-flappy_moving = 0
-
-x_pipe = 0
-y_pipe = 0
 pipe = pygame.image.load("Game_pictrues\\pipe.png")
 pipe2 = pygame.image.load("Game_pictrues\\pipe_2.png")
 pipe3 = pygame.image.load("Game_pictrues\\pipe_3.png")
 pipe4 = pygame.image.load("Game_pictrues\\pipe_4.png")
 pipe_list = [pipe, pipe2, pipe3, pipe4]
-pipes = []
-MAX_PIPES = 6
 
-worte = True
-
-ground_scroll = 0
-scroll_speed = 3
-
-
-flappy_vel = 0
-start_game = False
-jumping = False
-game_over = False
-touched_pipe = False
-SCORE = 0
-flip_pic = False
-
-def check_players():
+def check_pipes():
+    '''
+    The function returns True if the pipes list is empty or if the 
+    y-coordinate of the last pipe is less than 350, and False otherwise.
+    '''
     if len(pipes)==0:
         return True
-    elif pipes[-1][1] < 350:   #450  
+    elif pipes[-1][1] < 350:
         return True
     else:
         return False
     
-def generatePalyers():
+def generate_pipes():
+    '''
+    The function selects a pipe image randomly from pipe_list, 
+    potentially flips it based on the flip_pic flag, and appends it to the global pipes list with specific coordinates, 
+    toggling the flip_pic flag after each addition if check_players returns true.
+    '''
     global pipes
     global flip_pic
-    if check_players():
+    if check_pipes():
         pipe = pipe_list[random.randint(0, len(pipe_list) - 1)]
         if flip_pic:
             # pygame.transform.flip() will flip the image 
@@ -85,18 +94,29 @@ def generatePalyers():
             flip_pic = True
     
 def move_pipes():
+    '''
+    The function updates the horizontal position of each pipe in 
+    the global pipes list by decreasing their x-coordinates by the value of scroll_speed.
+    '''
     global pipes
     for pipe in pipes:
         pipe[1] -= scroll_speed
 
-def show_players():
+def show_pipes():
+    '''
+    The function iterates over a list of pipes and displays each pipe 
+    on the screen, positioning it either at the top or the bottom based on a boolean value.
+    '''
     for pipe in pipes:
         if pipe[2]:
             screen.blit(pipe[0], (pipe[1], 0))
         else:
             screen.blit(pipe[0], (pipe[1], backgrund.get_size()[1] - pipe[0].get_size()[1]))
         
-def remove_players():
+def remove_pipes():
+    '''
+    This function removes any pipe from the global list pipes whose x-coordinates is less than -50.
+    '''
     global pipes
     
     for pipe in pipes:
@@ -104,6 +124,10 @@ def remove_players():
             pipes.remove(pipe)
 
 def check_touch_pipe():
+    '''
+    This function checks if the Flappy Bird sprite collides with any of the pipes 
+    on the screen, returning True if a collision is detected and False otherwise.
+    '''
     for pipe in pipes:
         # Get the coordinates of Flappy Bird's bounding box
         flappy_rect = pygame.Rect(x_flappy, y_flappy, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
@@ -118,7 +142,10 @@ def check_touch_pipe():
             return True  # Collision detected
     return False  # No collision detected
 
-def check_score():
+def update_score():
+    '''
+    The function increments the global SCORE variable each time the Flappy Bird passes a pipe on the screen.
+    '''
     global SCORE
     flappy_rect = pygame.Rect(x_flappy, y_flappy, image_sprite_flappy[0].get_width(), image_sprite_flappy[0].get_height())
     for pipe in pipes:
@@ -128,10 +155,16 @@ def check_score():
             SCORE += 1
 
 def draw_text(text, font, text_col, x, y):
+    '''
+    This function renders a given text with a specified font and color at the specified (x, y) position on the screen.
+    '''
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
 def draw_button():
+    '''
+    The draw_button function displays a button image on the screen and returns True if the button is clicked by the user.
+    '''
     click_restart = False
 
     pos = pygame.mouse.get_pos()
@@ -142,17 +175,19 @@ def draw_button():
     screen.blit(button_img, button)
     return click_restart
 
-def reset_game():
-    global pipes
-    pipes = []
-
 def check_bound():
-    if y_flappy < 10:
+    '''
+    This function checks if the variable y_flappy is less than 10 and returns True if it is, otherwise False.
+    '''
+    if y_flappy < uper_bound:
         return True
     return False
 
-#  
+
 def write_highScore():
+    '''
+    This function writes the current high score to a file if it exceeds the previously stored high score.
+    '''
     with open("HighScore.txt", "w+") as score_file:
         highscore = score_file.read()
 
@@ -201,9 +236,9 @@ while running:
         flappy_vel = 0
 
     screen.blit(bird_image, (x_flappy, y_flappy))
-    generatePalyers()
-    show_players()
-    remove_players()
+    generate_pipes()
+    show_pipes()
+    remove_pipes()
     if check_touch_pipe() or y_flappy > 392 :
         game_over = True
         start_game = False
@@ -211,7 +246,7 @@ while running:
 
     if game_over == False and start_game:
         move_pipes()
-        check_score()
+        update_score()
         ground_scroll -= scroll_speed
 
         if abs(ground_scroll) > 25:
